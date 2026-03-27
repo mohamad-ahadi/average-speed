@@ -1,20 +1,234 @@
+<script setup>
+import { ref, computed, onMounted } from "vue";
+import movies from "./movies";
+
+// const movies = ref([]);
+const allMovies = ref(movies);
+
+const query = ref("");
+
+onMounted(async () => {
+  // const html = await fetch("/movies.html").then((r) => r.text());
+  // // turn string into DOM
+  // const doc = new DOMParser().parseFromString(html, "text/html");
+  // const nodes = [...doc.body.children];
+  // let current = null;
+  // let section = null;
+  // for (const el of nodes) {
+  //   if (el.tagName === "H3") {
+  //     current = {
+  //       title: el.textContent.replace(/\d{4}$/, "").trim(),
+  //       year: el.textContent.match(/\d{4}$/)?.[0],
+  //       imdbCode: "",
+  //       type: "",
+  //       votes: "",
+  //       rating: "",
+  //       downloads: { softsub: [], dubbed: [] },
+  //     };
+  //   } else if (el.textContent.includes("IMDb Code")) {
+  //     current.imdbCode = el.textContent.split(":")[1].trim();
+  //   } else if (el.textContent.includes("Title Type")) {
+  //     current.type = el.textContent.split(":")[1].trim();
+  //   } else if (el.textContent.includes("IMDb Votes")) {
+  //     current.votes = el.textContent.split(":")[1].trim();
+  //   } else if (el.textContent.includes("IMDb Rates")) {
+  //     current.rating = el.textContent.split(":")[1].trim();
+  //   } else if (el.textContent.includes("SoftSub")) {
+  //     section = "softsub";
+  //   } else if (el.textContent.includes("Dubbed")) {
+  //     section = "dubbed";
+  //   } else if (el.querySelector("a") && section) {
+  //     const a = el.querySelector("a");
+  //     const size = el.textContent.split("/")[1]?.trim();
+  //     current.downloads[section].push({
+  //       label: a.textContent.trim(),
+  //       size,
+  //       link: a.href,
+  //     });
+  //   } else if (el.tagName === "HR") {
+  //     movies.value.push(current);
+  //     current = null;
+  //     section = null;
+  //   }
+  // }
+  // console.log(movies.value);
+  // exportMovies();
+});
+
+// function exportMovies() {
+//   const content = `export default ${JSON.stringify(movies.value, null, 2)}\n`;
+
+//   const blob = new Blob([content], { type: "text/javascript" });
+//   const url = URL.createObjectURL(blob);
+
+//   const a = document.createElement("a");
+//   a.href = url;
+//   a.download = "movies.js";
+//   a.click();
+
+//   URL.revokeObjectURL(url);
+// }
+
+const filteredMovies = computed(() =>
+  allMovies.value.filter(
+    (m) =>
+      m.title.toLowerCase().includes(query.value.toLowerCase()) ||
+      m.imdbCode.includes(query.value)
+  )
+);
+
+</script>
+
+<template>
+  <div class="page">
+    <input
+      v-model="query"
+      placeholder="Search title or IMDb code…"
+      class="search"
+    />
+
+    <div class="grid">
+      <div v-for="movie in filteredMovies" :key="movie.imdbCode" class="card">
+        <h3>{{ movie.title }} ({{ movie.year }})</h3>
+        <p>⭐ {{ movie.rating }} • 👥 {{ movie.votes }}</p>
+
+        <div v-if="movie.downloads.softsub.length">
+          <h4>SoftSub</h4>
+          <ul>
+            <li v-for="d in movie.downloads.softsub" :key="d.link">
+              <a :href="d.link">{{ d.label }}</a> – {{ d.size }}
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="movie.downloads.dubbed.length">
+          <h4>Dubbed</h4>
+          <ul>
+            <li v-for="d in movie.downloads.dubbed" :key="d.link">
+              <a :href="d.link">{{ d.label }}</a> – {{ d.size }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <button type="button" @click="loadMore">load more</button>
+  </div>
+</template>
+
+<style>
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.card {
+  background: #111;
+  border-radius: 12px;
+  padding: 16px;
+  color: #eee;
+  display: flex;
+  flex-direction: column;
+}
+
+.card h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.card h4 {
+  margin: 12px 0 6px;
+  font-size: 14px;
+  color: #aaa;
+}
+
+.card p {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #bbb;
+}
+
+.card a {
+  color: #4ea1ff;
+  text-decoration: none;
+}
+
+.card a:hover {
+  text-decoration: underline;
+}
+
+.search {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  font-size: 16px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #0b0b0b;
+  color: #fff;
+}
+
+.page {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+ul, li{
+  list-style-type: none;
+  text-align:left;
+}
+</style>
+
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+<!--  -->
+
+<!-- 
 <template>
   <div class="container">
-    <h1>Car Speed Tracker</h1>
-    <button @click="toggleTracking" id="myBtn">
-      {{ isTracking ? "Stop" : "Start" }}
-    </button>
+    <button @click="showMoviesPage">movies page</button>
 
-    <div class="display">
-      <p>Current Speed: {{ currentSpeed.toFixed(2) }} km/h</p>
-      <p>Distance: {{ totalDistance.toFixed(2) }} km</p>
-      <p>Average Speed: {{ averageSpeed.toFixed(2) }} km/h</p>
+    <div v-if="showMovies" class="movies">
+      <input v-model="query" placeholder="Search movies…" class="search" />
+
+      <div class="grid">
+        <div v-for="movie in filteredMovies" :key="movie.link" class="card">
+          <h3>{{ movie.title }}</h3>
+          <p>{{ movie.info }}</p>
+          <a :href="movie.link" target="_blank">Download</a>
+        </div>
+      </div>
+    </div>
+
+    <div v-else class="speed-tracker">
+      <h1>Car Speed Tracker</h1>
+      <button @click="toggleTracking" id="myBtn">
+        {{ isTracking ? "Stop" : "Start" }}
+      </button>
+
+      <div class="display">
+        <p>Current Speed: {{ currentSpeed.toFixed(2) }} km/h</p>
+        <p>Distance: {{ totalDistance.toFixed(2) }} km</p>
+        <p>Average Speed: {{ averageSpeed.toFixed(2) }} km/h</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watchEffect, computed } from "vue";
+import { ref, watchEffect, computed, onMounted } from "vue";
 
 // Reactive states
 const isTracking = ref(false);
@@ -107,6 +321,31 @@ const averageSpeed = computed(() => {
     ? totalDistance.value / (totalTime.value / 3600)
     : 0;
 });
+
+const showMovies = ref(false);
+const showMoviesPage = () => {
+  showMovies.value = true;
+  fetch().then((r) => console.log(r));
+};
+
+const movies = ref([]);
+const query = ref("");
+
+onMounted(() => {
+  const nodes = document.querySelectorAll("h3");
+
+  movies.value = [...nodes].map((el) => ({
+    title: el.querySelector("h3")?.textContent ?? "",
+    info: el.querySelector("p")?.textContent ?? "",
+    link: el.querySelector("a")?.href ?? "",
+  }));
+});
+
+const filteredMovies = computed(() =>
+  movies.value.filter((m) =>
+    m.title.toLowerCase().includes(query.value.toLowerCase())
+  )
+);
 </script>
 
 <style scoped>
@@ -136,4 +375,4 @@ button {
   border: 2px solid blue;
   background: lightblue;
 }
-</style>
+</style> -->
